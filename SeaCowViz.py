@@ -6,7 +6,7 @@ from mesa.visualization.modules import ChartModule
 canvasDims = 1000
 width = 100
 height = 100
-kelpAmnt = 400
+kelpAmnt = 600
 seaCowAmnt = 100
 
 #makes the agents visualize
