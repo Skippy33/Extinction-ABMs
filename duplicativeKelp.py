@@ -138,7 +138,6 @@ class seaCowAgent(Agent):
 
     #when it steps
     def step(self):
-        print(1)
         self.age += 1
         if self.currentFood >= self.matingThreshhold:
             self.matingThreshhold = 10
@@ -154,7 +153,6 @@ class seaCowAgent(Agent):
     
     #how to pathfind using A*
     def pathfinding(self):
-        print(2)
         #get the nearest food or a random place to go
 
         if type(self.target) != tuple:
@@ -228,7 +226,6 @@ class seaCowAgent(Agent):
         i = 1
         #while it has not spotted food
         while i < 100:
-            print("1")
             #continue the counter
             #get the neighborhood as an iterable
             neighborhood = self.model.grid.iter_neighbors(
@@ -237,10 +234,8 @@ class seaCowAgent(Agent):
             radius = i, 
             moore = True)
             randomizerList = []
-            print(neighborhood)
             #for each position in the iterable, check if it's occupied
             for gridLocation in neighborhood:
-                print(3)
                 #if empty, pass over it
                 if self.model.grid.is_cell_empty(gridLocation.pos):
                     pass

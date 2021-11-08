@@ -54,7 +54,7 @@ class MoneyModel(Model):
         for j in range(seaCowAmnt):
             #creates an agent
             self.uniqueIDcounter += 1
-            a = seaCowAgent(self.uniqueIDcounter, self)
+            a = seaCowAgent(self.uniqueIDcounter, self, age = choices([10, 20, 30, 40, 50, 60], weights=(15, 20, 25, 25, 7, 8), k=1)[0])
             self.schedule.add(a)
             # Add the agent to a random grid cell
             x = randrange(self.grid.width)
@@ -95,7 +95,7 @@ class kelpAgent(Agent):
         super().__init__(unique_id, model)
         #sets type, starting food and the food timer
         self.availableFood = choices([0,1], weights=(30, 70), k=1)[0]
-        self.timeToGrow = randint(1, 7)
+        self.timeToGrow = randint(1, 15)
         self.type = "kelp"
 
     def step(self):

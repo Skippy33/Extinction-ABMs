@@ -1,23 +1,25 @@
 from mesa import Agent
-from random import randint, choice, shuffle
+from random import randint, choice, shuffle, choices
 from math import sqrt as square_root
+from math import hypot as hypotenuse
+from time import time
 
 
 
 class seaCowAgent(Agent):
     """ An agent with fixed initial wealth."""
-    def __init__(self, unique_id, model):
+    def __init__(self, unique_id, model, age = 1):
         super().__init__(unique_id, model)
         #sets type, starting food, age and the food timer
         self.currentFood = randint(4,7)
         self.type = "seaCow"
         self.matingThreshhold = 15
-        self.age = 1
+        self.age = age
 
     #when it steps
     def step(self):
-        self.age += 1
-        if self.currentFood >= self.matingThreshhold:
+        self.age += .1
+        if self.currentFood >= self.matingThreshhold and self.age > 15 and self.age < 50:
             self.matingThreshhold = 10
             self.target = self.findMate()
         else:
@@ -25,9 +27,22 @@ class seaCowAgent(Agent):
         #pathfind
         self.pathfinding()
         #if outa food, die
+        if self.age > 70:
+            self.model.grid.remove_agent(self)
+            self.model.schedule.remove(self)
+            print("old age")
+            return
         if self.currentFood <= 0:
             self.model.grid.remove_agent(self)
             self.model.schedule.remove(self)
+            print("starved")
+            return
+        if self.age < 15:
+            if choices([True, False], weights=(1, 100), k=1)[0]:
+                self.model.grid.remove_agent(self)
+                self.model.schedule.remove(self)
+                print("died as child")
+                return
     
     #how to pathfind using A*
     def pathfinding(self):
@@ -56,14 +71,13 @@ class seaCowAgent(Agent):
 
         #get the F values for each of the possible moves
         for neighbor in possiblePlaces:
-            
             if self.targetpos == neighbor and type(self.target) != tuple:
                 #breeds
                 if self.target.type == "seaCow":
                     #creates an agent
                     self.model.uniqueIDcounter += 1
                     a = seaCowAgent(self.model.uniqueIDcounter, self.model)
-                    #add to scheduler and creat
+                    #add to scheduler and create
                     self.model.schedule.add(a)
                     self.model.grid.place_agent(a, self.pos)
                     #select a new food target
@@ -75,10 +89,12 @@ class seaCowAgent(Agent):
 
 
             #get the x and y of the neighbor
-            neihborx, neighbory = neighbor
+            neighborx, neighbory = neighbor
             #get the H, G, and F values
-            H = square_root((abs(neihborx-foodx)**2 + (abs(neighbory-foody))**2))
-            G = square_root((abs(neihborx-selfx)**2 + (abs(neighbory-selfy))**2))
+            H = hypotenuse(abs(foodx-neighborx), abs(foody-neighbory))
+            G = hypotenuse(abs(neighborx-selfx), abs(neighbory-selfy))
+            if self.age < 15:
+                G *= 1.1
             F = G + H
             #append F to the list
             placesFs.append(F)
@@ -93,10 +109,35 @@ class seaCowAgent(Agent):
         placeInList = placesFs.index(minF)
         
         #have it eat
-        self.currentFood -= (placesGs[placeInList]/2)
+        self.currentFood -= (placesGs[placeInList]/2.5)
 
         #finally move that agent, anything after this won't be ran
         self.model.grid.move_agent(self, possiblePlaces[placeInList])
+
+        if self.targetpos == self.pos and type(self.target) != tuple:
+            #breeds
+            if self.target.type == "seaCow":
+                #creates an agent
+                if choices([True, False], weights=(20, 100), k=1)[0]:
+                    self.model.uniqueIDcounter += 1
+                    a = seaCowAgent(self.model.uniqueIDcounter, self.model)
+                    #add to scheduler and create
+                    self.model.schedule.add(a)
+                    self.model.grid.place_agent(a, self.pos)
+                    #select a new food target
+                    self.matingThreshhold = 15
+                    self.target = self.findFood()
+                self.model.uniqueIDcounter += 1
+                a = seaCowAgent(self.model.uniqueIDcounter, self.model)
+                #add to scheduler and create
+                self.model.schedule.add(a)
+                self.model.grid.place_agent(a, self.pos)
+                #select a new food target
+                self.matingThreshhold = 15
+                self.target = self.findFood()
+            elif self.target.type == "kelp":
+                self.eat()
+
 
 
     #identifies location of a food
@@ -156,7 +197,7 @@ class seaCowAgent(Agent):
     def findMate(self):
         i = 0
         #while it has not spotted food
-        while i < 10:
+        while i < 7:
             #continue the counter
             i += 1
             #get the neighborhood as an iterable
